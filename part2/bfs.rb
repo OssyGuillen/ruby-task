@@ -120,12 +120,21 @@ class GraphNode
 end
 
 
-def LCR
+class LCR
 	include BFS
 
 	attr_reader :value
 
-	def initialize # Indique los argumentos
+	def initialize(side,left,right)
+		right.map { |x| x.to_s }
+    	left.map { |x| x.to_s }
+    	right.map { |x| x.to_sym }
+    	left.map { |x| x.to_sym }
+        @value = {
+	      "where" => side.to_sym,
+	      "left"  => left,
+	      "right" => right
+    	}
 	end
 	def each(p)
 	end
