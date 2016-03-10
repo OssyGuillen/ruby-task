@@ -26,7 +26,8 @@ module BFS
 			head = queue.shift
 			if !visited.include? head
 				# Agregando los hijos a la cola.
-				head.each {|child| queue.push(child)}
+				b = lambda {|child| queue.push(child)}
+				head.each(b)
 				yield head
 				visited << head
 			end
@@ -56,7 +57,8 @@ module BFS
     		if predicate.call(result)
     			return route[result] << result
     		end
-    		result.each {|child| route.store(child,route[result] << result)}
+    		b = lambda {|child| route.store(child,route[result] << result)}
+    		result.each(b)
     	end
     	# Se retorna nulo en caso de no encontrar el elemento.
     	nil
@@ -90,10 +92,10 @@ class BinTree
 	end
 	def each(b)
 		if @left != nil
-			yield @left
+			b.call(@left)
 		end
 		if @right != nil
-			yield @right
+			b.call(@right)
 		end
 	end
 end
@@ -111,8 +113,22 @@ class GraphNode
 	def each(b)
 		if @children != nil
 			@children.each do |child|
-				yield child
+				b.call(child)
 			end
 		end
+	end
+end
+
+
+def LCR
+	include BFS
+
+	attr_reader :value
+
+	def initialize # Indique los argumentos
+	end
+	def each(p)
+	end
+	def solve
 	end
 end
