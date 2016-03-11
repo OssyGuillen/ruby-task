@@ -64,7 +64,7 @@ module BFS
     	nil
 	end
 
-	# Usando el método traveling, va recorriendo la esctructura usando
+	# Usando el método traveling, va recorriendo la estructura usando
 	# BFS, aplicando la acción a cada nodo retornado por traveling
 	# y retornando todos los nodos listados.
 	def walk(start,action)
@@ -125,19 +125,39 @@ class LCR
 
 	attr_reader :value
 
-	def initialize(side,left,right)
-		right.map { |x| x.to_s }
-    	left.map { |x| x.to_s }
-    	right.map { |x| x.to_sym }
-    	left.map { |x| x.to_sym }
+	def initialize(side,l,r)
+		l.map { |x| x.to_s }
+    	r.map { |x| x.to_s }
+    	l.map { |x| x.to_sym }
+    	r.map { |x| x.to_sym }
         @value = {
 	      "where" => side.to_sym,
-	      "left"  => left,
-	      "right" => right
+	      "left"  => l,
+	      "right" => r
     	}
 	end
+
+	def isValid
+		if (@value["where"].to_s == 'right')
+			if (@value["left"].include?(:lobo) and @value["left"].include?(:cabra)) or
+				(@value["left"].include?(:cabra) and @value["left"].include?(:repollo))
+				false
+			else
+				true
+			end
+		else
+			if (@value["right"].include?(:lobo) and @value["right"].include?(:cabra)) or
+				(@value["right"].include?(:cabra) and @value["right"].include?(:repollo))
+				false
+			else
+				true
+			end
+		end
+	end
+
 	def each(p)
 	end
+
 	def solve
 	end
 end
