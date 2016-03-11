@@ -11,17 +11,19 @@
 #
 # Autores: 			Gabriel Iglesias 11-10xxx
 # 		   			Oscar Guillen    11-11264
-# Última edición: 	10 de marzo de 2016.
+# Grupo:     		G16
+# Última edición: 	11 de marzo de 2016.
 
 # Módulo para el recorrido BFS.
 module BFS
 
-	# NOTA: Método auxiliar.
 	# Método que recorre la estructura desde start
 	# haciendo uso del algoritmo de BFS.
 	def traveling(start)
-		queue = [start]
+		queue = []
 		visited = []
+		# Se agrega el elemento inicial.
+		queue.push(start)
 		while !queue.empty?
 			head = queue.shift
 			if !visited.include? head
@@ -54,12 +56,18 @@ module BFS
 		route = {}
 		route.store(start,[])
 		start.traveling(start) do |result|
-    		if predicate.call(result)
-    			return route[result] << result
-    		end
-    		b = lambda {|child| route.store(child,route[result] << result)}
-    		result.each(b)
-    	end
+			route.keys.each do |k|
+				if k == result
+					result = k
+				end
+			end
+			
+			if predicate.call(result)
+				return route[result] + [result]
+			end
+			b = lambda {|child| route.store(child,route[result] + [result])}
+			result.each(b)
+		end
     	# Se retorna nulo en caso de no encontrar el elemento.
     	nil
 	end
@@ -70,8 +78,8 @@ module BFS
 	def walk(start,action)
 		visited = []
 		start.traveling(start) do |result|
-			action.call(result)
-			visited << result
+			result.value = action.call(result)
+			visited.push(result)
 		end
 		# Se retorna la lista de nodos visitados.
 		visited
@@ -85,11 +93,20 @@ class BinTree
 	attr_accessor :value, 	# Valor almacenado en el nodo
 				  :left, 	# BinTree izquierdo
 				  :right 	# BinTree derecho
+
+	# Inicialización de un arbol binario.
+	# v: valor del nodo.
+	# l: hijo izquierdo.
+	# d: hijo derecho.
 	def initialize(v,l,r)
 		@value = v
 		@left = l
 		@right = r
 	end
+
+	# Aplicación de un bloque b sobre los hijos del
+	# árbol binario.
+	# b: bloque.
 	def each(b)
 		if @left != nil
 			b.call(@left)
@@ -106,10 +123,18 @@ class GraphNode
 
 	attr_accessor :value,	# Valor alamacenado en el nodo
 				  :children # Arreglo de sucesores GraphNode
+
+	# Inicialización de un arbol binario.
+	# v: valor del nodo.
+	# c: arreglo de hijos.
 	def initialize(v,c)
 		@value = v
 		@children = c
 	end
+
+	# Aplicación de un bloque b sobre los hijos del
+	# grafo de arreglo de nodos.
+	# b: bloque.
 	def each(b)
 		if @children != nil
 			@children.each do |child|
@@ -120,31 +145,102 @@ class GraphNode
 end
 
 
+# Implementación de la clase LoboCabraRepollo.
+# para resolver el problema "Lobo, Cabra y Repollo".
 class LCR
 	include BFS
 
-	attr_reader :value
+	attr_reader :value # Hash de símbolos.
+					   # Incluye la posición del bote y
+					   # lo que hay en cada orilla.
 
-	def initialize(side,l,r)
-		l.map { |x| x.to_s }
-    	r.map { |x| x.to_s }
-    	l.map { |x| x.to_sym }
-    	r.map { |x| x.to_sym }
-        @value = {
-	      "where" => side.to_sym,
-	      "left"  => l,
-	      "right" => r
-    	}
+	# Inicialización de un LCR.
+	# s: posición del bote.
+	# l: contenido en la orilla izquierda.
+	# r: contenido en la orilla derecha.
+	def initialize(s,l,r)
+		@value = {}
+		# Se pasan todos los valores a símbolos.
+		l.map { |x| x.to_s.to_sym }.uniq
+    	r.map { |x| x.to_s.to_sym }.uniq
+        @value.store("where",s.to_sym)
+        @value.store("left",l)
+        @value.store("right",r)
 	end
 
+	# Aplicación de un bloque p sobre los hijos del
+	# LCR. En éste caso, los hijos son los posibles
+	# estados que se pueden generar.
+	# p: bloque.
+	def each(p)
+		# Estados para mover solo el bote de orilla.
+		movShipR = LCR.new(:right,@value["left"],@value["right"])
+		movShipL = LCR.new(:left,@value["left"],@value["right"])
+		if @value["where"] == :right
+			@value["right"].each do |x|
+				estadoDer = [] + @value["right"]
+				estadoIzq = [] + @value["left"]
+				estadoDer.delete(x)
+				estadoIzq.push(x)
+				# Creación dinámica de los hijos.
+				newState = LCR.new(:left,estadoIzq,estadoDer)
+				p.call(newState) if newState.isValid
+			end
+			p.call(movShipL) if movShipL.isValid
+		else
+			@value["left"].each do |x|
+				estadoDer = [] + @value["right"]
+				estadoIzq = [] + @value["left"]
+				estadoDer.push(x)
+				estadoIzq.delete(x)
+				# Creación dinámica de los hijos.
+				newState = LCR.new(:right,estadoIzq,estadoDer)
+				p.call(newState) if newState.isValid
+			end
+			p.call(movShipR) if movShipR.isValid
+		end
+		
+	end
+
+	# Método que resuelve el problema de busqueda del estado
+	# final del problema Lobo, Cabra y Repollo.
+	# Estado final: Todos los objetos del lado derecho
+	# de la orilla.
+	def solve
+		puts "Solución: "
+		# Verificación del estado final.
+	    final = lambda { |t| (t.value["right"].sort == [:repollo,:cabra,:lobo].sort) and
+      						 (t.value["left"].sort == []) 							 and
+      						 (t.value["where"] == :right)
+      			}
+	    path(self,final).each do |arb|
+	    	puts "NUEVO ESTADO ->  "+ arb.to_s
+	    	puts " "
+	    end
+	    return "Finalizado"
+	end	
+
+	# Método que imprime un LCR agradable a la vista.
+	def to_s
+    	"Posicion Bote: #{@value["where"]} | Izq: #{@value["left"]} | Der: #{@value["right"]}"
+  	end
+	
+
+  	# Método que verifica si un estado nuevo es válido.
+  	# Para ello, no pueden estar todos ls objetos de un lado
+  	# y el bote del otro. Además, el lobo y la cabra no pueden
+  	# estar solos en un orilla. Igualmente, no pueden estar
+  	# solos la cabra y el repollo.
 	def isValid
-		if (@value["where"].to_s == 'right')
+		# Lado derecho de la orilla.
+		if @value["where"] == :right
 			if (@value["left"].include?(:lobo) and @value["left"].include?(:cabra)) or
 				(@value["left"].include?(:cabra) and @value["left"].include?(:repollo))
 				false
 			else
 				true
 			end
+		# Lado izquierdo de la orilla.
 		else
 			if (@value["right"].include?(:lobo) and @value["right"].include?(:cabra)) or
 				(@value["right"].include?(:cabra) and @value["right"].include?(:repollo))
@@ -153,11 +249,5 @@ class LCR
 				true
 			end
 		end
-	end
-
-	def each(p)
-	end
-
-	def solve
 	end
 end
