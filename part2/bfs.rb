@@ -56,7 +56,8 @@ module BFS
 		route = {}
 		route.store(start,[])
 		start.traveling(start) do |result|
-			route.keys.each do |k|
+			# Revisión de todas las claves en la ruta ya trazada.
+			route.each do |k,v|
 				if k == result
 					result = k
 				end
