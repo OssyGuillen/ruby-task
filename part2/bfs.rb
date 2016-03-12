@@ -58,15 +58,15 @@ module BFS
 		start.traveling(start) do |result|
 			# Verificación de las claves ya contenidas en
 			# el camino y la nueva recibida.
+			# Muy útil para el LCR problem.
 			route.each do |k,v|
-				if k == result
-					result = k
-				end
+				result = k if result == k
 			end
+			route[result] += [result]
 			if predicate.call(result)
-				return route[result] + [result]
+				return route[result]
 			end
-			b = lambda {|child| route.store(child,route[result] + [result])}
+			b = lambda {|child| route.store(child,route[result])}
 			result.each(b)
 		end
     	# Se retorna nulo en caso de no encontrar el elemento.
@@ -175,6 +175,8 @@ class LCR
 	# p: bloque.
 	def each(p)
 		# Estados para mover solo el bote de orilla.
+		movShipL = LCR.new(:left,@value["left"],@value["right"])
+		movShipR = LCR.new(:right,@value["left"],@value["right"])
 		if @value["where"] == :right
 			@value["right"].each do |x|
 				estadoDer = [] + @value["right"]
@@ -185,7 +187,6 @@ class LCR
 				newState = LCR.new(:left,estadoIzq,estadoDer)
 				p.call(newState) if newState.isValid
 			end
-			movShipL = LCR.new(:left,@value["left"],@value["right"])
 			p.call(movShipL) if movShipL.isValid
 		else
 			@value["left"].each do |x|
@@ -197,10 +198,8 @@ class LCR
 				newState = LCR.new(:right,estadoIzq,estadoDer)
 				p.call(newState) if newState.isValid
 			end
-			movShipR = LCR.new(:right,@value["left"],@value["right"])
 			p.call(movShipR) if movShipR.isValid
 		end
-		
 	end
 
 	# Método que resuelve el problema de busqueda del estado
@@ -209,12 +208,10 @@ class LCR
 	# de la orilla.
 	def solve
 		puts "Solución: "
-		#Estado final del problema.
-		estadoFinal = LCR.new(:right,[],[:repollo,:cabra,:lobo])
 		# Verificación del estado final.
-	    final = Proc.new{|t| (t.value["right"].sort == estadoFinal.value["right"].sort) and
-	     					 (t.value["left"].sort == estadoFinal.value["left"].sort)   and
-	     					 (t.value["where"] == estadoFinal.value["where"])}
+	    final = Proc.new{|t| (t.value["right"].sort == [:cabra,:lobo,:repollo].sort) and
+	     					 (t.value["left"].sort == [])   and
+	     					 (t.value["where"] == :right)}
 	    path(self,final).each do |arb|
 	    	puts "NUEVO ESTADO ->  "+ arb.to_s
 	    	puts " "
@@ -252,4 +249,15 @@ class LCR
 			end
 		end
 	end
+
+	# Método que sobreescribe el == para LCR. Esta necesidad surge de 
+	# tener que comparar elementos en el método PATH, del bfs para no
+	# repetir claves en el recorrido. En el caso de LCR, la comparación
+	# es totalmente distinta, teniendo que comparar cada uno de sus
+	# parámetros.
+	def ==(obj)
+    	b = (@value["where"] == obj.value["where"])
+      	b = b and (@value["left"].sort == obj.value["left"].sort)
+        b and (@value["right"].sort == obj.value["right"].sort)
+  	end
 end
