@@ -6,13 +6,18 @@
 # Trimestre Enero - Marzo 2016.
 # 
 # Tarea Ruby
+#
 # Juego ”Piedra, Papel o Tijeras”
 #  
-# Autores: Gabriel Iglesias 11-10476.
-#          Oscar Guillen    11-11264.
+# Autores:          Gabriel Iglesias 11-10476.
+#                   Oscar Guillen    11-11264.
+# Grupo:     		G16
+# Última edición: 	11 de marzo de 2016.
 
 # Clase abstracta para movimientos.
 class Movement
+
+	# Muestra el invocante como un string.
 	def to_s 
 		self.class.name
 	end
@@ -20,18 +25,24 @@ end
 
 # Clase que representa la jugada piedra. 
 class Rock < Movement
+
+	# Determina el ganador entre una jugada de tipo Rock y una de tipo m.
 	def score(m)
 		m.compareRock
 	end
 
+	# Determina el ganador entre dos movimientos Rock. 
+	# Se retorna la tupla para empate.
 	def compareRock
 		return [0,0]
 	end
 
+	# Determina el ganador entre un movimiento Rock y uno Paper.
 	def comparePaper
 		return [0,1]
 	end
 
+	# Determina el ganador entre un movimiento Rock y uno Scissors.
 	def compareScissors
 		return [1,0]
 	end
@@ -39,18 +50,24 @@ end
 
 # Clase que representa la jugada papel.
 class Paper < Movement
+	
+	# Determina el ganador entre una jugada de tipo Paper y una de tipo m.
 	def score(m)
 		m.comparePaper
 	end
 
+	# Determina el ganador entre un movimiento Paper y uno Rock.
 	def compareRock
 		return [0,1]
 	end
 
+	# Determina el ganador entre dos movimientos Paper. 
+	# Se retorna la tupla para empate.	
 	def comparePaper
 		return [0,0]
 	end
 
+	# Determina el ganador entre un movimiento Paper y uno Scissors.
 	def compareScissors
 		return [0,1]
 	end
@@ -58,18 +75,24 @@ end
 
 # Clase que representa la jugada tijeras.
 class Scissors < Movement
+	
+	# Determina el ganador entre una jugada de tipo Scissors y una de tipo m.
 	def score(m)
 		m.compareScissors
 	end
 
+	# Determina el ganador entre un movimiento Scissors y uno Rock.
 	def compareRock
 		return [0,1]
 	end
 
+	# Determina el ganador entre un movimiento Scsissors y uno Paper.
 	def comparePaper
 		return [1,0]
 	end
 
+	# Determina el ganador entre dos movimientos Scissors. 
+	# Se retorna la tupla para empate.
 	def compareScissors
 		return [0,0]
 	end
@@ -78,18 +101,22 @@ end
 # Clase abstracta para estrategias.
 class Strategy
 	
-	SEED = 42
-	PRNG = Random.new(SEED)
+	SEED = 42                # Constante para la semilla.
+	PRNG = Random.new(SEED)  # Constante para la clase Random para generar 
+	                         # números aleatorios. 
 
+	# Muestra el invocante como un string.
 	def to_s
 		self.class.name	
 	end
 
+	# Devuelve el siguiente movimiento de la estrategia invocante.
 	def next(mov = nil)
 		raise RunTimeError, 
 			  "No existe siguiente movimiento para una estrategia abstracta"
 	end
 
+	# Lleva la estrategia al estado inicial.
 	def reset
 		raise RunTimeError,
 			  "No se puede hacer reset de esta estrategia"
@@ -103,18 +130,18 @@ class Uniform < Strategy
 	attr_reader :list
 
 	def initialize(list)
+
+		# Se eliminan los duplicados de la lista de movimientos.
 		@list = list.uniq
 		
+		# Chequea que la lista de movimientos no sea vacia.
 		if @list.empty? 
 			raise ArgumentError, "Error: lista de movimientos vacia"
-
-		# elsif (@list - [:Rock,:Scissors,:Paper]).empty?
-		# 	raise ArgumentError, 
-		# 		  "Error: lista de movimientos contiene movimientos no validos"
 		end
 
 	end
 
+	# Devuelve el siguiente movimiento de la estrategia invocante.
 	def next(mov = nil)
 		index = PRNG.rand(@list.length)
 		
@@ -129,10 +156,12 @@ class Uniform < Strategy
 	
 	end
 
+	# Muestra la estrategia invocante como un string.
 	def to_s
-		puts "Estrategia #{self.class.name}. Jugadas Posibles: " + @list.to_s
+		"Estrategia " + super + ". Jugadas Posibles: " + @list.to_s
 	end
 
+	# Lleva la estrategia al estado inicial.
 	def reset
 	end
 end
@@ -146,17 +175,16 @@ class Biased < Strategy
 	def initialize(hash)
 		@hash = hash
 
+		# Chequea que el hash de movimientos no sea vacio.
 		if @hash.empty? 
 			raise ArgumentError, "hash de movimientos vacio"
-
-		# elsif (@hash.keys - [:Rock,:Scissors,:Paper]).empty?
-		# 	raise ArgumentError, 
-		# 		  "Error: hash de movimientos contiene movimientos no validos"
 		end
 	
+
 		@pr = @hash.values.inject(:+)
 	end
 
+	# Devuelve el siguiente movimiento de la estrategia invocante.
 	def next(mov = nil)
 		random = PRNG.rand(@pr) 
 		
@@ -180,10 +208,12 @@ class Biased < Strategy
 	
 	end
 
+	# Muestra la estrategia invocante como un string.
 	def to_s
-		puts "Estrategia #{self.class.name}. Jugadas Posibles: " + @hash.to_s
+		"Estrategia " + super + ". Jugadas Posibles: " + @hash.to_s
 	end
 
+	# Lleva la estrategia al estado inicial.
 	def reset
 	end
 end
@@ -196,14 +226,29 @@ class Mirror < Strategy
 	attr_accessor :opponent_mov   # Movimiento del oponente.
 
 	def initialize(mov)
-		@initial_mov = @opponent_mov = mov
+		if !mov.is_a?(Movement)
+			raise ArgumentError, "el argumento no es un movimiento permitido"
+		else
+			@initial_mov = @opponent_mov = mov
+		end
+	
 	end
 
+	# Devuelve el siguiente movimiento de la estrategia invocante.
 	def next(mov)
-		@opponent_mov = mov
+		if mov
+			@opponent_mov = mov
+		end
+		
 		return @opponent_mov
 	end
 
+	# Muestra la estrategia invocante como un string.
+	def to_s
+		"Estrategia " + super + ". Movimiento Inicial: " + @initial_mov.to_s
+	end
+
+	# Lleva la estrategia al estado inicial.
 	def reset
 		@opponent_mov = @initial_mov
 	end
@@ -216,42 +261,59 @@ class Smart < Strategy
 	attr_accessor :p, :r, :s
 	
 	def initialize
-		@p = 0
-		@r = 0
-		@s = 0
+		@p = 0  # Número de jugadas Paper.
+		@r = 0  # Número de jugadas Rock.
+		@s = 0  # Número de jugadas Scissors.
 	end
 
+	# Devuelve el siguiente movimiento de la estrategia invocante.
 	def next(mov)
 		random = PRNG.rand(p+r+s-1)
 
-		# Decide cual sera la siguiente jugada
-		# result = case random
-		# 	when 0...p       then Scissors.new
-		# 	when p...p+r     then Paper.new
-		# 	when p+r...p+r+s then Rock.new
-		# end
+		# Caso en que no es la primera jugada
+		if mov 
+			# Aumenta la frecuencia de la jugada recien hecha por el oponente.
+			case mov.to_sym
+				when :Rock
+					@r += 1
+				when :Paper
+					@p += 1
+				when :Scissors
+					@s += 1				
+			end 
 
-		# # Aumenta la frecuencia de la jugada recien hecha por el oponente.
-		# case random
-		# 	when 0...p       then @s += 1
-		# 	when p...p+r     then @p += 1
-		# 	when p+r...P+r+s then @r += 1
-		# end
+			# Decide cual sera la siguiente jugada
+			case random
+				when 0...p
+					return Scissors.new
+				when p...p+r
+					return Paper.new
+				when p+r...p+r+s
+					return Rock.new
+			end
 
-		case random
-			when 0...p
-				@s += 1
-				return Scissors.new
-			when p...p+r
-				@p += 1
-				return Paper.new
-			when p+r...p+r+s
-				@r += 1
-				return Rock.new
+		# Caso en el que es la primera jugada.
+		else
+			aux = [:R,:P,:S]
+			random = PRNG.rand(2)
+
+			case aux[random]
+				when :R
+					return Rock.new
+				when :P
+					return Paper.new
+				when :S
+					return Scissors.new 
+			end
 		end
-		
 	end
 
+	# Muestra la estrategia invocante como un string.	
+	def to_s
+		"Estrategia " + super
+	end
+
+	# Lleva la estrategia al estado inicial.
 	def reset
 		self.initialize
 	end 
@@ -263,24 +325,32 @@ class Match
 	def initialize(hash)
 		@hash = hash
 
+		# Chequea que sólo existan dos jugadores
 		if hash.size != 2
 			raise ArgumentError, "solamente puede haber dos jugadores"
 
+		# Inicializa un arrehlo con los jugadores y un hash para guardar el estado del juego.
 		else
 			@players = hash.keys
 			@state = { @players[0] => 0, @players[1] => 0, :Rounds => 0}
 		end
 	end
 
+	# Realiza n rondas entre utilizando las etsrategias definidas en la 
+	# instancia de clase.
 	def rounds(n)
-		strategy1 = @hash[@players[0]]
+
+		# Se Asignan las estrategias de los jugadores.
+		strategy1 = @hash[@players[0]] 
 		strategy2 = @hash[@players[1]]
 		
+		# Se crea el primer movimiento de cada estrategia.
 		player1_mov = strategy1.next(nil)
 		player2_mov = strategy2.next(nil)
 		
+		# Realiza n jugadas y modifica el estado del juego.
 		for i in 1..n
-			result = player1_mov.score(playe2_mov)
+			result = player1_mov.score(player2_mov)
 			case result
 				when [0,1]
 					@state[@players[0]] += 1
@@ -289,38 +359,48 @@ class Match
 				when [0,0]
 			end
 			
-			@status[:Rounds] += 1
-			player1_mov = strategy.next(player2_mov)
-			player2_mov = strategy.next(player1_mov)
+			@state[:Rounds] += 1
+			player1_mov = strategy1.next(player2_mov)
+			player2_mov = strategy2.next(player1_mov)
 		
 		end
+
+		return @state
 	end
 
+	# Permite a los jugadores jugar hasta que alguno de ellos gane n rondas. 
+	# Cada jugador utiliza las estrategias definidas en la instancia de clase.	
 	def upto(n)
 		
+		# Se Asignan las estrategias de los jugadores.
 		strategy1 = @hash[@players[0]]
 		strategy2 = @hash[@players[1]]
 
+		# Se crea el primer movimiento de cada estrategia.
 		player1_mov = strategy1.next(nil)
 		player2_mov = strategy2.next(nil)
 		
-		while @state[@players[0]] != n && @state[@players[1]] != n do 
-			result = player1Mov.score(player2Mov)
+		# Itera hasta que uno de los jugadores alcanze las n rondas ganadas.
+		while (@state[@players[0]] < n) && (@state[@players[1]] < n) do 
+			result = player1_mov.score(player2_mov)
 			case result
 				when [1,0]
-					@state[self.p1Name] += 1
+					@state[@players[0]] += 1
 				when [0,1]
-					@state[self.p2Name] += 1
+					@state[@players[1]] += 1
 				when [0,0]
 			end
 			
 			@state[:Rounds] += 1
-			player1_mov = strategy.next(player2_mov)
-			player2_mov = strategy.next(player1_mov)
+			player1_mov = strategy1.next(player2_mov)
+			player2_mov = strategy2.next(player1_mov)
 
 		end
+
+		return @state
 	end
 
+	# Lleva el juego al estado inicial.
 	def restart
 		strategy1 = @hash[@players[0]]
 		strategy1.reset
@@ -329,19 +409,3 @@ class Match
 		@state = {@players[0] => 0, @players[1] => 0, :Rounds => 0}
 	end
 end
-
-############################################
-
-a = Rock.new
-a.to_s
-
-x = Rock.new
-y = Scissors.new
-z = Paper.new
-
-est1 = Uniform.new([:Paper,:Rock,:Scissors,:Paper])
-est1.next()
-
-hash = {:Rock => 1, :Scissors => 3, :Paper => 2}
-est2 = Biased.new(hash)
-est2.next()
