@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 # Universidad Simón Bolívar
 # Departamento de Computación y Tecnología de la Información
 # CI-3661 - Lab. de Lenguajes de Programación I.
@@ -9,7 +11,7 @@
 # 							* Recorrido BFS.
 # 							* Árboles implícitos.
 #
-# Autores: 			Gabriel Iglesias 11-10xxx
+# Autores: 			Gabriel Iglesias 11-10476
 # 		   			Oscar Guillen    11-11264
 # Grupo:     		G16
 # Última edición: 	11 de marzo de 2016.
