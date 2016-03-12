@@ -56,13 +56,13 @@ module BFS
 		route = {}
 		route.store(start,[])
 		start.traveling(start) do |result|
-			# Revisión de todas las claves en la ruta ya trazada.
+			# Verificación de las claves ya contenidas en
+			# el camino y la nueva recibida.
 			route.each do |k,v|
 				if k == result
 					result = k
 				end
 			end
-			
 			if predicate.call(result)
 				return route[result] + [result]
 			end
@@ -175,8 +175,6 @@ class LCR
 	# p: bloque.
 	def each(p)
 		# Estados para mover solo el bote de orilla.
-		movShipR = LCR.new(:right,@value["left"],@value["right"])
-		movShipL = LCR.new(:left,@value["left"],@value["right"])
 		if @value["where"] == :right
 			@value["right"].each do |x|
 				estadoDer = [] + @value["right"]
@@ -187,6 +185,7 @@ class LCR
 				newState = LCR.new(:left,estadoIzq,estadoDer)
 				p.call(newState) if newState.isValid
 			end
+			movShipL = LCR.new(:left,@value["left"],@value["right"])
 			p.call(movShipL) if movShipL.isValid
 		else
 			@value["left"].each do |x|
@@ -198,6 +197,7 @@ class LCR
 				newState = LCR.new(:right,estadoIzq,estadoDer)
 				p.call(newState) if newState.isValid
 			end
+			movShipR = LCR.new(:right,@value["left"],@value["right"])
 			p.call(movShipR) if movShipR.isValid
 		end
 		
@@ -209,11 +209,12 @@ class LCR
 	# de la orilla.
 	def solve
 		puts "Solución: "
+		#Estado final del problema.
+		estadoFinal = LCR.new(:right,[],[:repollo,:cabra,:lobo])
 		# Verificación del estado final.
-	    final = lambda { |t| (t.value["right"].sort == [:repollo,:cabra,:lobo].sort) and
-      						 (t.value["left"].sort == []) 							 and
-      						 (t.value["where"] == :right)
-      			}
+	    final = Proc.new{|t| (t.value["right"].sort == estadoFinal.value["right"].sort) and
+	     					 (t.value["left"].sort == estadoFinal.value["left"].sort)   and
+	     					 (t.value["where"] == estadoFinal.value["where"])}
 	    path(self,final).each do |arb|
 	    	puts "NUEVO ESTADO ->  "+ arb.to_s
 	    	puts " "
