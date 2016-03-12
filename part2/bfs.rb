@@ -252,9 +252,8 @@ class LCR
 
 	# Método que sobreescribe el == para LCR. Esta necesidad surge de 
 	# tener que comparar elementos en el método PATH, del bfs para no
-	# repetir claves en el recorrido. En el caso de LCR, la comparación
-	# es totalmente distinta, teniendo que comparar cada uno de sus
-	# parámetros.
+	# repetir claves en el recorrido. A pesar de ser dos objetos distintos,
+	# dos objetos con parámetros iguales representan el mismo estado.
 	def ==(obj)
     	b = (@value["where"] == obj.value["where"])
       	b = b and (@value["left"].sort == obj.value["left"].sort)
